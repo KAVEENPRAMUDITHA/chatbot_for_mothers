@@ -29,17 +29,17 @@ def initialize_knowledge_base():
 
     # 1. Check if previously saved Embeddings exist
     if os.path.exists(DB_FAISS_PATH):
-        print("🔄 Using previously created Embeddings (Cache)...")
+        print("Using previously created Embeddings (Cache)...")
         try:
             # If available, load directly (takes seconds)
             vectorstore = FAISS.load_local(DB_FAISS_PATH, embeddings, allow_dangerous_deserialization=True)
-            print("✅ Knowledge Base Loaded from Cache!")
+            print(" Knowledge Base Loaded from Cache!")
             return
         except Exception as e:
-            print(f"⚠️ Cache loading error: {e}. Rebuilding...")
+            print(f" Cache loading error: {e}. Rebuilding...")
 
     # 2. new pdf embeddings creating
-    print("🔄 Reading PDFs and creating embeddings...")
+    print("Reading PDFs and creating embeddings...")
     
     pdf_paths = [
         "data/Maternal & Newborn Strat Plan .pdf", 
@@ -49,12 +49,12 @@ def initialize_knowledge_base():
     all_docs = []
     for pdf_path in pdf_paths:
         if os.path.exists(pdf_path):
-            print(f"   📄 Loading: {pdf_path}")
+            print(f"   Loading: {pdf_path}")
             loader = PyPDFLoader(pdf_path)
             docs = loader.load()
             all_docs.extend(docs)
         else:
-            print(f"⚠️ PDF not found: {pdf_path}")
+            print(f" PDF not found: {pdf_path}")
 
     if all_docs:
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
@@ -65,14 +65,15 @@ def initialize_knowledge_base():
         
         # 3. save into local directory for future use
         vectorstore.save_local(DB_FAISS_PATH)
-        print("✅ Knowledge Base Created & Saved Locally!")
+        print(" Knowledge Base Created & Saved Locally!")
     else:
-        print("⚠️ PDF නොමැත.")
+        print(" NO PDFs loaded. Knowledge Base is empty.")
 
 # Start by initializing the knowledge base
 initialize_knowledge_base()
 
 # --- Chat Function ---
+@app.route('/', methods=['POST'])
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
@@ -85,7 +86,10 @@ def chat():
     
     system_instruction = (
         "ඔබ ශ්‍රී ලංකාවේ මාතෘ සහ ළදරු සෞඛ්‍ය පිළිබඳ සහායක AI නිලධාරියෙකි. "
-        "පිළිතුරු සිංහලෙන් ලබා දෙන්න. මෙය වෛද්‍ය උපදෙසක් නොවන බව කරුණාවෙන් සලකන්න."
+        " ප්‍රශ්නය සිංහලෙන් අසයිනම් පමණක් පිළිතුරු සිංහලෙන් ලබා දෙන්න. මෙය වෛද්‍ය උපදෙසක් නොවන බව කරුණාවෙන් සලකන්න."
+        " පරිශීලකයා විසින් ලබා දී ඇති පසුබැසීම සහ ඡායාරූපය අනුව පිළිතුරු සපයන්න."
+        "මාතෘ සහ ළදරු සෞඛ්‍ය  හැර අසනන ප්‍රශ්න සඳහා පිළිතුරු නොදෙන්න hi,Hello,කොහොමද,What is your name? යන වැනි සාමාන්‍ය ආමන්ත්‍රවාචී ප්‍රශ්න සඳහාද පිළිතුරු දෙන්න."
+        " අවශ්‍ය නම්, 'සමාවන්න, මට ඒ ගැන තොරතුරු නැත' යනුවෙන් පිළිතුරු දෙන්න."
     )
 
     context_text = ""
@@ -115,4 +119,4 @@ def chat():
         return jsonify({"answer": "සමාවන්න, දෝෂයක් ඇති විය.", "error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
